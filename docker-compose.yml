@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # 1. Relational Database (Shared for Bioprocess Data & Airflow Metadata)
+  postgres:
+    image: postgres:15-alpine
+    container_name: digest_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: data_engineer
+      POSTGRES_PASSWORD: zoomcamp_secret_pass
+      POSTGRES_DB: biostream_db
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - digest_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U data_engineer -d biostream_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Vector Database for Scientific Paper Context
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: digest_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    networks:
+      - digest_network
+
+  # 3. Object Storage (Data Lake simulation)
+  minio:
+    image: minio/minio:latest
+    container_name: digest_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: adminpassword
+    volumes:
+      - ./data/minio:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - digest_network
+
+  # 4. Apache Airflow Webserver & Scheduler (Combined for lightweight Codespaces deployment)
+  airflow:
+    image: apache/airflow:2.8.1-python3.10
+    container_name: digest_airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://data_engineer:zoomcamp_secret_pass@postgres:5432/biostream_db
+      - AIRFLOW__CORE__FERNET_KEY=46dxvaZ7FB96N7v_YkP468_S_SXY-4_L2-wQQvOAgAg=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+      - _AIRFLOW_WWW_USER_USERNAME=admin
+      - _AIRFLOW_WWW_USER_PASSWORD=adminpassword
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db init &&
+      airflow users create --username admin --password adminpassword --firstname Bio --lastname Dev --role Admin --email admin@biostream.com &&
+      airflow scheduler & airflow webserver"
+    networks:
+      - digest_network
+
+networks:
+  digest_network:
+    driver: bridge
