@@ -1,0 +1,22 @@
+# BioStreamer platform dependencies.
+
+# --- Track 1: structured telemetry ---
+numpy>=1.26
+pandas>=2.1
+pyarrow>=14.0
+psycopg2-binary>=2.9
+minio>=7.2
+
+# --- Track 2: unstructured / vector (Step 3) ---
+langchain-text-splitters>=0.0.1
+sentence-transformers>=2.5
+qdrant-client>=1.7
+
+# --- Unified layer (Step 4) ---
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+anthropic>=0.40
+streamlit>=1.32
+plotly>=5.19
+requests>=2.31

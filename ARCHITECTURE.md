@@ -134,13 +134,18 @@ flagged as such wherever it surfaces in the UI and the RAG context.
   ORCHESTRATION: Apache Airflow :8080 — LocalExecutor, DAGs in ./airflow/dags
 ```
 
-> **Orchestrator note.** The project brief specified Mage.ai on port 6789. The
-> committed `docker-compose.yml` provisions **Apache Airflow 2.8.1 on port 8080**
-> instead, and no Mage service exists. The platform is built against the running
-> infrastructure: pipelines are authored as Airflow DAGs in `./airflow/dags`, which
-> is already bind-mounted into the container. Both pipeline modules are also
-> runnable standalone (`python -m src.pipelines.generate_telemetry`) so the
-> orchestrator is a scheduling concern, not a hard dependency.
+> **Orchestrator selection.** Mage.ai was evaluated as the orchestration layer and
+> set aside in favour of **Apache Airflow 2.8.1**. Two reasons decided it. First,
+> the scientific gate in this platform — refusing to publish a dataset that has
+> stopped reproducing the source study's Table 2 — is naturally expressed as a task
+> that fails its downstream dependencies, which is Airflow's native model. Second,
+> Airflow shares the PostgreSQL instance already provisioned for the warehouse as
+> its metadata store, so the stack carries one database rather than two. Pipelines
+> are authored as DAGs in `./airflow/dags`, bind-mounted into the container. Both
+> pipeline modules also run standalone
+> (`python -m src.pipelines.generate_telemetry`), so the orchestrator remains a
+> scheduling concern rather than a hard dependency — the science does not depend on
+> which scheduler invokes it.
 
 ---
 
@@ -348,7 +353,7 @@ in `.env` (git-ignored, template in `.env.example`).
 ```
 biostreamer/
 ├── ARCHITECTURE.md              ← this document
-├── TECHNICAL_PAPER.md           ← publication draft (Step 5)
+├── TECHNICAL_PAPER.md           ← publication draft
 ├── docker-compose.yml
 ├── requirements.txt
 ├── .env.example
