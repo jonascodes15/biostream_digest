@@ -76,7 +76,7 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=adminpassword
-      - _PIP_ADDITIONAL_REQUIREMENTS=pandas pyarrow psycopg2-binary minio
+      - _PIP_ADDITIONAL_REQUIREMENTS=pandas pyarrow psycopg2-binary minio langchain-text-splitters sentence-transformers qdrant-client
     logging:
       options:
         max-size: "10m"
