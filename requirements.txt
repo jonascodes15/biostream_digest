@@ -18,5 +18,12 @@ uvicorn[standard]>=0.27
 pydantic>=2.6
 anthropic>=0.40
 streamlit>=1.32
+# Streamlit 1.61's bundled ASGI gzip shim (streamlit/web/server/starlette/
+# starlette_gzip_middleware.py) calls GZipResponder without the
+# thread_minimum_size kwarg that starlette>=1.0 requires -- an unpinned
+# install pulls starlette 1.x (via FastAPI) and every Streamlit page 500s.
+# Pin below 1.0 until Streamlit ships a compatible shim.
+starlette<1.0
 plotly>=5.19
 requests>=2.31
+matplotlib>=3.8    # backs pandas Styler.background_gradient in the fleet overview
