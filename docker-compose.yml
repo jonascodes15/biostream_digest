@@ -89,10 +89,22 @@ services:
       - .:/opt/airflow/biostreamer
     ports:
       - "8080:8080"
-    command: >
-      bash -c "airflow db init &&
-      airflow users create --username admin --password adminpassword --firstname Bio --lastname Dev --role Admin --email admin@biostream.com &&
-      airflow scheduler & airflow webserver"
+    # Sequential startup. A single backgrounded '&&' chain races the webserver
+    # against the migration, so the webserver comes up against an un-migrated
+    # database and exits. Each step below completes before the next begins;
+    # only the scheduler is backgrounded, and the webserver takes PID 1 via exec
+    # so container stop signals reach it.
+    command:
+      - bash
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin --password adminpassword \
+          --firstname Bio --lastname Dev --role Admin \
+          --email admin@biostream.com || true
+        airflow scheduler &
+        exec airflow webserver
     networks:
       - digest_network
 
