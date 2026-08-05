@@ -5,12 +5,9 @@
 Every task is idempotent, so a failed run can be cleared and re-triggered
 without duplicating warehouse rows or corrupting the lake.
 
-Note on the orchestrator: the project brief specified Mage.ai on port 6789, but
-docker-compose.yml provisions Apache Airflow 2.8.1 on port 8080 and no Mage
-service exists. This DAG targets the infrastructure that actually runs. The
-underlying pipeline modules are also runnable standalone
-(``python -m src.pipelines.load_telemetry``), so Airflow is a scheduling
-concern rather than a hard dependency.
+The pipeline modules underneath are runnable standalone
+(``python -m src.pipelines.load_telemetry``), so Airflow schedules the work but
+does not own it -- the science does not depend on which scheduler invokes it.
 """
 
 from __future__ import annotations
