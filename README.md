@@ -8,6 +8,22 @@ BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 para
 
 ---
 
+## Screenshots
+
+**Fleet overview** — the platform's 36 reference reactors reproducing the source paper's Table 2, side by side, plus the 100-reactor fleet's performance by substrate.
+
+![Fleet overview](docs/screenshots/fleet_overview.png)
+
+**Reactor explorer** — cumulative and daily yield for any of the 100 reactors, with the reference-design cohort flagged.
+
+![Reactor explorer](docs/screenshots/reactor_explorer.png)
+
+**Research chat** — hybrid retrieval with the full trace exposed. Here it's caught its own LLM call failing (an exhausted API key) and correctly returned the retrieval context anyway, rather than failing the request.
+
+![Research chat](docs/screenshots/research_chat.png)
+
+---
+
 ## The problem
 
 A 36-digester factorial anaerobic digestion study, observed daily for 37 days, requires upward of **1,300 manual water-displacement readings** — each read off a calibrated cylinder and hand-transcribed into a spreadsheet. That logging burden, not digester capacity, is what caps how large a co-digestion or concentration-response study a small lab can attempt.
