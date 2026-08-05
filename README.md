@@ -2,23 +2,23 @@
 
 **A hybrid structured/unstructured data platform for scaling anaerobic digestion research beyond what manual telemetry logging supports.**
 
-BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 parallel bioreactor lines — pH, volatile fatty acids, alkalinity, biogas yield — grounded in a peer-reviewed factorial co-digestion study, and pairs that with a literature-aware retrieval layer so numeric answers and mechanistic explanations both come from verified sources, never from a language model's memory.
+BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 parallel bioreactor lines. It tracks pH, volatile fatty acids, alkalinity, and biogas yield, all grounded in a peer-reviewed factorial co-digestion study. It pairs that with a literature-aware retrieval layer so numeric answers and mechanistic explanations both come from verified sources, never from a language model's memory.
 
-> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md) · Peer-review-style writeup: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md)
+> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md). Peer-review-style writeup: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md)
 
 ---
 
 ## Screenshots
 
-**Fleet overview** — the platform's 36 reference reactors reproducing the source paper's Table 2, side by side, plus the 100-reactor fleet's performance by substrate.
+**Fleet overview.** The platform's 36 reference reactors reproducing the source paper's Table 2, side by side, plus the 100-reactor fleet's performance by substrate.
 
 ![Fleet overview](docs/screenshots/fleet_overview.png)
 
-**Reactor explorer** — cumulative and daily yield for any of the 100 reactors, with the reference-design cohort flagged.
+**Reactor explorer.** Cumulative and daily yield for any of the 100 reactors, with the reference-design cohort flagged.
 
 ![Reactor explorer](docs/screenshots/reactor_explorer.png)
 
-**Research chat** — hybrid retrieval with the full trace exposed. Here it's caught its own LLM call failing (an exhausted API key) and correctly returned the retrieval context anyway, rather than failing the request.
+**Research chat.** Hybrid retrieval with the full trace exposed. Here it caught its own LLM call failing (an exhausted API key) and correctly returned the retrieval context anyway, rather than failing the request.
 
 ![Research chat](docs/screenshots/research_chat.png)
 
@@ -26,9 +26,9 @@ BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 para
 
 ## The problem
 
-A 36-digester factorial anaerobic digestion study, observed daily for 37 days, requires upward of **1,300 manual water-displacement readings** — each read off a calibrated cylinder and hand-transcribed into a spreadsheet. That logging burden, not digester capacity, is what caps how large a co-digestion or concentration-response study a small lab can attempt.
+A 36-digester factorial anaerobic digestion study, observed daily for 37 days, requires upward of **1,300 manual water-displacement readings**, each read off a calibrated cylinder and hand-transcribed into a spreadsheet. That logging burden, not digester capacity, is what caps how large a co-digestion or concentration-response study a small lab can attempt.
 
-BioStreamer removes that ceiling. It automates acquisition and interpretation for a fleet an order of magnitude larger, while staying accountable to the science: the platform's reference cohort is required — by an automated pipeline gate, not a one-off check — to reproduce the source study's published yields before any of its output is trusted.
+BioStreamer removes that ceiling. It automates acquisition and interpretation for a fleet an order of magnitude larger, while staying accountable to the science. The platform's reference cohort is required, by an automated pipeline gate rather than a one-off check, to reproduce the source study's published yields before any of its output is trusted.
 
 ---
 
@@ -36,10 +36,10 @@ BioStreamer removes that ceiling. It automates acquisition and interpretation fo
 
 | Who | What they get |
 |---|---|
-| **A researcher scaling past bench-scale** | 100 simulated reactor lines instead of 36, spanning a continuous design space (bean:plantain ratio × 5–25% total solids) the original 36-digester budget couldn't explore — with the 36 reactors that *do* replicate the published design reproducing its results to within 0.029 ml/day. |
-| **Someone debugging a failing reactor** | The `/chat` endpoint and Streamlit UI answer "why is R047 souring?" by combining that reactor's exact pH/VFA trace (SQL) with the literature's explanation of VFA-driven methanogen inhibition (vector search) — never a guess, always attributed. |
-| **A reviewer auditing a claim** | Every chat answer ships with its retrieval trace: the exact passages and warehouse aggregates that grounded it, each tagged `published_finding` (from the source paper) or `domain_context` (general process chemistry, not what the paper measured) — so a claim can never be mistaken for a result the study didn't report. |
-| **A data engineer evaluating the pattern** | A worked example of hybrid RAG over a quantitative domain: SQL for the numbers a vector store can't compute, vectors for the mechanism SQL can't explain, orchestrated by Airflow with a scientific-reproduction gate in the DAG's critical path. |
+| **A researcher scaling past bench-scale** | 100 simulated reactor lines instead of 36, spanning a continuous design space (bean:plantain ratio × 5-25% total solids) the original 36-digester budget couldn't explore. The 36 reactors that *do* replicate the published design reproduce its results to within 0.029 ml/day. |
+| **Someone debugging a failing reactor** | The `/chat` endpoint and Streamlit UI answer "why is R047 souring?" by combining that reactor's exact pH/VFA trace (SQL) with the literature's explanation of VFA-driven methanogen inhibition (vector search). Never a guess, always attributed. |
+| **A reviewer auditing a claim** | Every chat answer ships with its retrieval trace: the exact passages and warehouse aggregates that grounded it, each tagged `published_finding` (from the source paper) or `domain_context` (general process chemistry, not what the paper measured). A claim can never be mistaken for a result the study didn't report. |
+| **A data engineer evaluating the pattern** | A worked example of hybrid RAG over a quantitative domain. SQL handles the numbers a vector store can't compute, vectors handle the mechanism SQL can't explain, orchestrated by Airflow with a scientific-reproduction gate in the DAG's critical path. |
 
 ---
 
@@ -49,7 +49,7 @@ Two ingestion tracks converge on a unified retrieval layer. Full narrative in [`
 
 ```mermaid
 flowchart TB
-    subgraph track1["Track 1 — Structured"]
+    subgraph track1["Track 1: Structured"]
         direction TB
         SIM["generate_telemetry.py<br/>mechanistic VFA/pH/Gompertz sim<br/>100 reactors × 30 days, seeded RNG"]
         SIM -->|Parquet, bronze| MINIO[("MinIO<br/>s3://biostreamer-lake")]
@@ -57,7 +57,7 @@ flowchart TB
         SIM -->|upsert| PG
     end
 
-    subgraph track2["Track 2 — Unstructured"]
+    subgraph track2["Track 2: Unstructured"]
         direction TB
         CORPUS["literature.py<br/>paper text + domain notes<br/>tagged by provenance"]
         CORPUS --> SPLIT["RecursiveCharacterTextSplitter<br/>512 / 64 chunk / overlap"]
@@ -68,10 +68,10 @@ flowchart TB
     PG --> API
     QDRANT --> API
 
-    API["FastAPI hybrid RAG layer<br/>/chat: SQL aggregates + ranked passages → LLM<br/>degrades gracefully with no LLM configured"]
+    API["FastAPI hybrid RAG layer<br/>/chat combines SQL aggregates with ranked passages, then calls the LLM<br/>degrades gracefully with no LLM configured"]
     API --> UI["Streamlit UI<br/>fleet overview · reactor explorer · research chat"]
 
-    AF["Apache Airflow<br/>bioreactor_telemetry DAG — validates against published Table 2<br/>literature_embedding DAG — validates retrieval provenance"]
+    AF["Apache Airflow<br/>bioreactor_telemetry DAG validates against published Table 2<br/>literature_embedding DAG validates retrieval provenance"]
     AF -.orchestrates.-> SIM
     AF -.orchestrates.-> CORPUS
 
@@ -79,9 +79,9 @@ flowchart TB
     style AF fill:#5a4a7a,color:#fff
 ```
 
-**Why hybrid, not vector-only.** A vector store retrieves a passage that *discusses* yields; it cannot compute a mean over 3,000 telemetry rows. SQL returns exact numbers with no mechanism. Every `/chat` call runs both retrievals and hands the language model labelled context from each — it composes an answer, it never does the arithmetic itself.
+**Why hybrid, not vector-only.** A vector store retrieves a passage that *discusses* yields; it cannot compute a mean over 3,000 telemetry rows. SQL returns exact numbers with no mechanism. Every `/chat` call runs both retrievals and hands the language model labelled context from each, so it composes an answer instead of doing the arithmetic itself.
 
-**The validation gate.** Both Airflow DAGs fail closed: `bioreactor_telemetry` refuses to load a dataset into the warehouse unless its 36-reactor reference cohort reproduces the published mean yields within tolerance; `literature_embedding` refuses to consider indexing complete unless three retrieval probes return the expected provenance class. A pipeline that silently drifts from ground truth is a worse failure mode here than one that stops.
+**The validation gate.** Both Airflow DAGs fail closed. `bioreactor_telemetry` refuses to load a dataset into the warehouse unless its 36-reactor reference cohort reproduces the published mean yields within tolerance. `literature_embedding` refuses to consider indexing complete unless three retrieval probes return the expected provenance class. A pipeline that silently drifts from ground truth is a worse failure mode here than one that stops.
 
 ---
 
@@ -93,10 +93,10 @@ flowchart TB
 | Vector store | **Qdrant** | `bioprocess_knowledge` collection, cosine distance, 384-d |
 | Data lake (bronze) | **MinIO** | S3-compatible landing zone for generated telemetry Parquet |
 | Orchestration | **Apache Airflow 2.8** | Two DAGs, each with a validation task in the critical path |
-| Embedding model | **sentence-transformers/all-MiniLM-L6-v2** | CPU-inferable, 384-d, ~16 ms/query once resident |
+| Embedding model | **sentence-transformers/all-MiniLM-L6-v2** | CPU-inferable, 384-d, roughly 16 ms per query once resident |
 | Chunking | **langchain-text-splitters** | `RecursiveCharacterTextSplitter`, 512/64 chunk/overlap |
-| API | **FastAPI** | Structured endpoints + hybrid `/chat` |
-| LLM | **Anthropic Claude** (`claude-opus-5` default) | Synthesis only — never sees a question without grounding, degrades gracefully with no key configured |
+| API | **FastAPI** | Structured endpoints plus the hybrid `/chat` route |
+| LLM | **Anthropic Claude** (`claude-opus-5` default) | Synthesis only. Never sees a question without grounding, and degrades gracefully with no key configured |
 | UI | **Streamlit** + **Plotly** | Fleet overview, reactor explorer, research chat with exposed retrieval trace |
 | Simulation | **NumPy / pandas** | Coupled acidogenesis/methanogenesis kinetic model, modified Gompertz envelope |
 
@@ -112,11 +112,11 @@ biostreamer/
 ├── requirements.txt
 ├── .env.example                 # copy to .env and fill in
 ├── airflow/dags/
-│   ├── bioreactor_telemetry_dag.py     # Track 1: simulate → validate → land → load → verify
-│   └── literature_embedding_dag.py     # Track 2: chunk → embed & index → verify retrieval
+│   ├── bioreactor_telemetry_dag.py     # Track 1: simulate, validate, land, load, verify
+│   └── literature_embedding_dag.py     # Track 2: chunk, embed and index, verify retrieval
 └── src/
     ├── common/
-    │   ├── science.py           # every measured constant from the source paper — single source of truth
+    │   ├── science.py           # every measured constant from the source paper (single source of truth)
     │   ├── literature.py        # corpus, tagged published_finding / domain_context
     │   └── config.py            # env-driven settings
     ├── db/schema.sql            # warehouse schema + analytical views
@@ -136,7 +136,7 @@ biostreamer/
 
 - Docker + Docker Compose
 - Python 3.10+
-- ~3 GB free disk (mostly the CPU-only PyTorch build for the embedding model)
+- Roughly 3 GB free disk (mostly the CPU-only PyTorch build for the embedding model)
 
 ### 1. Start the infrastructure
 
@@ -154,7 +154,7 @@ docker compose up -d airflow
 |---|---|---|
 | Airflow UI | http://localhost:8080 | `admin` / `adminpassword` |
 | MinIO console | http://localhost:9001 | `admin` / `adminpassword` |
-| Qdrant API | http://localhost:6333 | — |
+| Qdrant API | http://localhost:6333 | none |
 | PostgreSQL | `localhost:5432` | `data_engineer` / `zoomcamp_secret_pass`, db `biostream_db` |
 
 ### 2. Configure environment
@@ -163,7 +163,7 @@ docker compose up -d airflow
 cp .env.example .env
 ```
 
-Fill in `ANTHROPIC_API_KEY` to enable synthesized chat answers. **Everything else works without it** — `/chat` returns the retrieved literature passages and SQL aggregates directly, just without an LLM-composed answer.
+Fill in `ANTHROPIC_API_KEY` to enable synthesized chat answers. **Everything else works without it.** `/chat` returns the retrieved literature passages and SQL aggregates directly, just without an LLM-composed answer.
 
 ### 3. Install Python dependencies (for running pipelines/API/UI outside Docker)
 
@@ -176,14 +176,14 @@ pip install -r requirements.txt
 Either trigger them from the Airflow UI (`bioreactor_telemetry`, `literature_embedding`), or run them directly:
 
 ```bash
-# Track 1: simulate 100 reactors × 30 days, validate against the published paper, load to Postgres
+# Track 1: simulate 100 reactors x 30 days, validate against the published paper, load to Postgres
 python -m src.pipelines.load_telemetry
 
 # Track 2: chunk the literature corpus, embed it, index into Qdrant
 python -m src.pipelines.embed_literature
 ```
 
-Both print a pass/fail summary — the telemetry loader shows the 12-cell comparison against the paper's Table 2; the embedding pipeline reports how many chunks landed under each provenance tag.
+Both print a pass/fail summary. The telemetry loader shows the 12-cell comparison against the paper's Table 2; the embedding pipeline reports how many chunks landed under each provenance tag.
 
 ### 5. Start the API and UI
 
@@ -195,7 +195,7 @@ python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 python -m streamlit run src/ui/app.py --server.port 8501
 ```
 
-Open **http://localhost:8501**. Check **http://localhost:8000/health** first if anything looks off — it reports Postgres, Qdrant, the embedding model, and the LLM client independently.
+Open **http://localhost:8501**. Check **http://localhost:8000/health** first if anything looks off. It reports Postgres, Qdrant, the embedding model, and the LLM client independently.
 
 ### Quick sanity checks
 
@@ -214,14 +214,14 @@ curl -s -X POST localhost:8000/chat -H "Content-Type: application/json" \
 
 The platform is evaluated against the study it's grounded in, not just its own internal consistency:
 
-- **36 reference-design reactors** reproduce the source paper's Table 2 mean yields to a **maximum absolute deviation of 0.029 ml/day** — within the resolution of the water-displacement method itself.
-- **Retrieval provenance** was verified against three representative questions (comparative-yield, process-mechanism, factual-recall); the top-ranked passage carried the correct `published_finding` / `domain_context` tag in every case, and this check is now an automated gate in the `literature_embedding` DAG.
-- **Graceful degradation** was exercised under a real failure condition (an exhausted API key): `/chat` correctly surfaced the billing error while still returning full retrieval context, rather than failing the request outright.
+- **36 reference-design reactors** reproduce the source paper's Table 2 mean yields to a **maximum absolute deviation of 0.029 ml/day**, well within the resolution of the water-displacement method itself.
+- **Retrieval provenance** was verified against three representative questions (comparative-yield, process-mechanism, factual-recall). The top-ranked passage carried the correct `published_finding` / `domain_context` tag in every case, and this check is now an automated gate in the `literature_embedding` DAG.
+- **Graceful degradation** was exercised under a real failure condition (an exhausted API key). `/chat` correctly surfaced the billing error while still returning full retrieval context, rather than failing the request outright.
 
-Full methodology and results: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md), §4.
+Full methodology and results: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md), section 4.
 
 ---
 
 ## Source study
 
-Nnokwe, J.C., Orji, M.U., Ajuruchi, V.C., Jonas, K.C. (2024). *Effects of slurry concentration and co-digestion on biogas yields from unseeded Phaseolus vulgaris (bean) peels chaff and unseeded Musa paradisiaca (plantain) peels chaff.* GSC Biological and Pharmaceutical Sciences, 29(02), 214–218. [10.30574/gscbps.2024.29.2.0423](https://doi.org/10.30574/gscbps.2024.29.2.0423)
+Nnokwe, J.C., Orji, M.U., Ajuruchi, V.C., Jonas, K.C. (2024). *Effects of slurry concentration and co-digestion on biogas yields from unseeded Phaseolus vulgaris (bean) peels chaff and unseeded Musa paradisiaca (plantain) peels chaff.* GSC Biological and Pharmaceutical Sciences, 29(02), 214-218. [10.30574/gscbps.2024.29.2.0423](https://doi.org/10.30574/gscbps.2024.29.2.0423)
