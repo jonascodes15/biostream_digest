@@ -63,6 +63,20 @@ services:
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
       - _AIRFLOW_WWW_USER_USERNAME=admin
       - _AIRFLOW_WWW_USER_PASSWORD=adminpassword
+      # BioStreamer pipeline configuration (service names, not localhost)
+      - BIOSTREAM_PROJECT_ROOT=/opt/airflow/biostreamer
+      - PYTHONPATH=/opt/airflow/biostreamer
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=data_engineer
+      - POSTGRES_PASSWORD=zoomcamp_secret_pass
+      - POSTGRES_DB=biostream_db
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=adminpassword
+      - _PIP_ADDITIONAL_REQUIREMENTS=pandas pyarrow psycopg2-binary minio
     logging:
       options:
         max-size: "10m"
@@ -71,6 +85,8 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
+      # Mount the repo so DAGs can import src.pipelines.*
+      - .:/opt/airflow/biostreamer
     ports:
       - "8080:8080"
     command: >
