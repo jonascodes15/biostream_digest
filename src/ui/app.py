@@ -128,10 +128,10 @@ def render_fleet_overview() -> None:
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("**Platform (simulated)**")
-        st.dataframe(pivot_obs.style.format("{:.3f}").background_gradient(cmap="Greens"), use_container_width=True)
+        st.dataframe(pivot_obs.style.format("{:.3f}").background_gradient(cmap="Greens"), width='stretch')
     with col_b:
         st.markdown("**Published (paper, Table 2)**")
-        st.dataframe(pivot_pub.style.format("{:.2f}").background_gradient(cmap="Greens"), use_container_width=True)
+        st.dataframe(pivot_pub.style.format("{:.2f}").background_gradient(cmap="Greens"), width='stretch')
 
     max_delta = matrix["delta"].abs().max()
     st.caption(f"Maximum absolute deviation from published means: {max_delta:.3f} ml/day.")
@@ -166,7 +166,7 @@ def render_fleet_overview() -> None:
         height=380,
         margin=dict(t=20, b=20),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     st.caption(
         "BLEND = exploratory reactors spanning the continuous bean-fraction x "
         "5-25%TS design space, beyond the four discrete substrates the paper tested."
@@ -241,7 +241,7 @@ def render_reactor_explorer() -> None:
             height=420, margin=dict(t=20, b=20),
             legend=dict(orientation="h", yanchor="bottom", y=1.02),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with tab2:
         state_colors = {
@@ -260,13 +260,13 @@ def render_reactor_explorer() -> None:
         fig.add_hline(y=6.5, line_dash="dot", line_color="orange", annotation_text="inhibition onset (pH 6.5)")
         fig.add_hline(y=6.0, line_dash="dot", line_color="red", annotation_text="souring threshold (pH 6.0)")
         fig.update_layout(xaxis_title="Day", yaxis_title="pH", height=420, margin=dict(t=20, b=20))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         legend_md = "  ".join(f"<span style='color:{c}'>●</span> {s}" for s, c in state_colors.items())
         st.markdown(legend_md, unsafe_allow_html=True)
 
     with st.expander("Raw telemetry"):
-        st.dataframe(telemetry, use_container_width=True, hide_index=True)
+        st.dataframe(telemetry, width='stretch', hide_index=True)
 
 
 # --------------------------------------------------------------------------- #
