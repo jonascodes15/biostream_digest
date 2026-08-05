@@ -7,12 +7,12 @@ pyarrow>=14.0
 psycopg2-binary>=2.9
 minio>=7.2
 
-# --- Track 2: unstructured / vector (Step 3) ---
+# --- Track 2: unstructured / vector ---
 langchain-text-splitters>=0.0.1
 sentence-transformers>=2.5
 qdrant-client>=1.7
 
-# --- Unified layer (Step 4) ---
+# --- Unified layer: API + UI ---
 fastapi>=0.110
 uvicorn[standard]>=0.27
 pydantic>=2.6
