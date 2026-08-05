@@ -4,7 +4,8 @@
 
 BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 parallel bioreactor lines. It tracks pH, volatile fatty acids, alkalinity, and biogas yield, all grounded in a peer-reviewed factorial co-digestion study. It pairs that with a literature-aware retrieval layer so numeric answers and mechanistic explanations both come from verified sources, never from a language model's memory.
 
-> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md). Peer-review-style writeup: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md)
+> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+> Note: This repository represents the refactored, production-ready version of BioStreamer, consolidated and documented for release.
 
 ---
 
