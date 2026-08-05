@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Generated data
+data/generated/
+data/staging/
+
+# Container state (large binary blobs; not source)
+data/postgres/
+data/minio/
+data/qdrant/
+
+# Airflow runtime
+airflow/logs/
+airflow/plugins/
