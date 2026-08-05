@@ -76,7 +76,6 @@ services:
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ROOT_USER=admin
       - MINIO_ROOT_PASSWORD=adminpassword
-      - _PIP_ADDITIONAL_REQUIREMENTS=pandas pyarrow psycopg2-binary minio langchain-text-splitters sentence-transformers qdrant-client
     logging:
       options:
         max-size: "10m"
@@ -87,6 +86,10 @@ services:
       - ./airflow/plugins:/opt/airflow/plugins
       # Mount the repo so DAGs can import src.pipelines.*
       - .:/opt/airflow/biostreamer
+      # Persist installed Python packages across container recreation --
+      # otherwise the pip install below (torch + Track 2 deps) reruns and
+      # re-downloads on every restart.
+      - airflow_site_packages:/home/airflow/.local
     ports:
       - "8080:8080"
     # Sequential startup. A single backgrounded '&&' chain races the webserver
@@ -94,10 +97,25 @@ services:
     # database and exits. Each step below completes before the next begins;
     # only the scheduler is backgrounded, and the webserver takes PID 1 via exec
     # so container stop signals reach it.
+    #
+    # Track 2 dependencies are installed here rather than via
+    # _PIP_ADDITIONAL_REQUIREMENTS (which the base image's own entrypoint
+    # comment marks "NEVER use in production" and which resolves everything in
+    # one unscoped `pip install`). torch is installed first, from its own
+    # CPU-only index -- the default PyPI resolution otherwise pulls the CUDA
+    # build, several GB of nvidia-* packages this container never uses, which
+    # is what exhausted local disk on first attempt. Installing it up front
+    # means sentence-transformers' own torch dependency is already satisfied
+    # and pip does not re-resolve a GPU build for it afterward.
     command:
       - bash
       - -c
       - |
+        pip install --no-cache-dir --quiet \
+          torch --index-url https://download.pytorch.org/whl/cpu
+        pip install --no-cache-dir --quiet \
+          pandas pyarrow psycopg2-binary minio \
+          qdrant-client langchain-text-splitters sentence-transformers
         airflow db migrate
         airflow users create \
           --username admin --password adminpassword \
@@ -111,3 +129,6 @@ services:
 networks:
   digest_network:
     driver: bridge
+
+volumes:
+  airflow_site_packages:
