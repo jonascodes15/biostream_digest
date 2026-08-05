@@ -1,6 +1,10 @@
 # Secrets
 .env
 
+# Personal working notes — not part of the submission (see the file's own
+# footer for why). Kept in the working tree for convenience, never committed.
+PROJECT_NOTES.md
+
 # Python
 __pycache__/
 *.py[cod]
