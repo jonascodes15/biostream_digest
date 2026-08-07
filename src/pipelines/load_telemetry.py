@@ -1,4 +1,4 @@
-"""Track 1 sink — land telemetry in MinIO (bronze) and PostgreSQL (silver).
+"""Track 1 sink: land telemetry in MinIO (bronze) and PostgreSQL (silver).
 
 Idempotent by construction: the warehouse load is an upsert keyed on
 (reactor_id, day_index), so a failed or re-triggered DAG run converges to the

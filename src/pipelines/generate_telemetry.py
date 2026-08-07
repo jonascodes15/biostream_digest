@@ -1,7 +1,8 @@
-"""Track 1 — structured telemetry simulation for 100 parallel bioreactor lines.
+"""Track 1: structured telemetry simulation for 100 parallel bioreactor lines.
 
 Generates a scientifically grounded daily-logging dataset for 100 anaerobic
-digesters over a 30-day timeline, mirroring the parameters of:
+digesters over a 37-day timeline, matching the source study's own observation
+window (PAPER_RETENTION_DAYS in science.py), and mirroring the parameters of:
 
     Nnokwe JC, Orji MU, Ajuruchi VC, Jonas KC. "Effects of slurry concentration
     and co-digestion on biogas yields from unseeded Phaseolus vulgaris (bean)
