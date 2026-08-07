@@ -1,4 +1,4 @@
-"""BioStreamer analyst UI — Streamlit panel over the unified FastAPI layer.
+"""BioStreamer analyst UI: Streamlit panel over the unified FastAPI layer.
 
 Three views:
   1. Fleet overview   -- warehouse KPIs and the substrate x concentration
@@ -83,7 +83,7 @@ for check, ok in health["checks"].items():
     st.sidebar.markdown(f"{'✅' if ok else '❌'} {check}")
 if not health["checks"]["llm"]:
     st.sidebar.info(
-        "LLM not configured — chat runs in retrieval-only mode "
+        "LLM not configured, chat runs in retrieval-only mode "
         "(literature + warehouse context, no synthesized answer)."
     )
 
@@ -96,7 +96,7 @@ page = st.sidebar.radio("View", ["Fleet overview", "Reactor explorer", "Research
 
 def render_fleet_overview() -> None:
     st.title("Fleet overview")
-    st.caption("100 parallel bioreactor lines — 36 reproducing the published design, 64 exploratory.")
+    st.caption("100 parallel bioreactor lines (36 reproducing the published design, 64 exploratory).")
 
     summary = api_get("/stats/summary")
     totals = summary["warehouse_totals"]
@@ -110,7 +110,7 @@ def render_fleet_overview() -> None:
     st.divider()
     st.subheader("Reference cohort vs. published Table 2")
     st.caption(
-        "Mean daily biogas yield (ml/day) — the platform's 36 reference reactors "
+        "Mean daily biogas yield (ml/day). The platform's 36 reference reactors "
         "replicate the paper's RCBD exactly; these numbers should match Table 2."
     )
 
@@ -210,7 +210,7 @@ def render_reactor_explorer() -> None:
         if reactor["beyond_published_envelope"]:
             st.warning(
                 f"{reactor_id} runs at {reactor['slurry_concentration_pct_ts']:.1f}% TS, above the "
-                f"published envelope ceiling of {sci.PUBLISHED_TS_CEILING_PCT}% TS — this is "
+                f"published envelope ceiling of {sci.PUBLISHED_TS_CEILING_PCT}% TS. This is "
                 "extrapolation beyond the source study's design space."
             )
         elif reactor["is_reference_design"]:

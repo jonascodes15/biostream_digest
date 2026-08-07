@@ -5,6 +5,12 @@
 # footer for why). Kept in the working tree for convenience, never committed.
 PROJECT_NOTES.md
 
+# Not ready to publish yet. Was committed and pushed earlier, then removed
+# from every commit in history on 2026-08-05 (filter-branch + force-push)
+# because the repo is public. Kept in the working tree locally; re-add and
+# remove this line when ready to make it public again.
+TECHNICAL_PAPER.md
+
 # Python
 __pycache__/
 *.py[cod]

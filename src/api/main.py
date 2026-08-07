@@ -1,4 +1,4 @@
-"""BioStreamer unified API — the point where both tracks converge.
+"""BioStreamer unified API: the point where both tracks converge.
 
     /reactors, /telemetry/{id}, /stats/summary   -> structured warehouse (SQL)
     /search                                       -> vector store (Qdrant) only
@@ -7,10 +7,10 @@
                                                       context, handed to Claude
 
 The hybrid design is deliberate. A vector store retrieves a passage that
-*discusses* yields; it cannot compute a mean over 3000 telemetry rows. SQL
+*discusses* yields; it cannot compute a mean over 3,700 telemetry rows. SQL
 returns exact numbers with no mechanism. Numeric questions are answered from
 the warehouse, mechanistic questions from retrieved literature, and the LLM
-composes the two — it never does the arithmetic itself. That split is the
+composes the two, and never does the arithmetic itself. That split is the
 single largest lever on hallucination risk in this domain, because a
 fabricated yield figure looks identical to a real one.
 

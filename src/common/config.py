@@ -47,7 +47,7 @@ class PostgresSettings:
     port: int = field(default_factory=lambda: _env_int("POSTGRES_PORT", 5432))
     user: str = field(default_factory=lambda: _env("POSTGRES_USER", "data_engineer"))
     password: str = field(
-        default_factory=lambda: _env("POSTGRES_PASSWORD", "zoomcamp_secret_pass")
+        default_factory=lambda: _env("POSTGRES_PASSWORD", "biostream_dev_pw")
     )
     database: str = field(default_factory=lambda: _env("POSTGRES_DB", "biostream_db"))
     schema: str = field(default_factory=lambda: _env("BIOSTREAM_SCHEMA", "bioprocess"))
@@ -103,7 +103,7 @@ class LLMSettings:
 class SimulationSettings:
     seed: int = field(default_factory=lambda: _env_int("BIOSTREAM_SEED", 20240423))
     reactor_count: int = field(default_factory=lambda: _env_int("BIOSTREAM_REACTORS", 100))
-    timeline_days: int = field(default_factory=lambda: _env_int("BIOSTREAM_DAYS", 30))
+    timeline_days: int = field(default_factory=lambda: _env_int("BIOSTREAM_DAYS", 37))
     start_date: str = field(default_factory=lambda: _env("BIOSTREAM_START_DATE", "2024-10-01"))
 
 
