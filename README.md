@@ -4,7 +4,7 @@
 
 BioStreamer simulates, warehouses, and reasons over daily telemetry for 100 parallel bioreactor lines. It tracks pH, volatile fatty acids, alkalinity, and biogas yield, all grounded in a peer-reviewed factorial co-digestion study. It pairs that with a literature-aware retrieval layer so numeric answers and mechanistic explanations both come from verified sources, never from a language model's memory.
 
-> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md). Peer-review-style writeup: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md)
+> 📄 Full design rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md).Note: This repository represents the refactored, production-ready version of BioStreamer, consolidated and documented for release.
 
 ---
 
@@ -36,7 +36,7 @@ BioStreamer removes that ceiling. It automates acquisition and interpretation fo
 
 | Who | What they get |
 |---|---|
-| **A researcher scaling past bench-scale** | 100 simulated reactor lines instead of 36, spanning a continuous design space (bean:plantain ratio × 5-25% total solids) the original 36-digester budget couldn't explore. The 36 reactors that *do* replicate the published design reproduce its results to within 0.029 ml/day. |
+| **A researcher scaling past bench-scale** | 100 simulated reactor lines instead of 36, spanning a continuous design space (bean:plantain ratio × 5-25% total solids) the original 36-digester budget couldn't explore. The 36 reactors that *do* replicate the published design are calibrated to its Table 2 means (residual under 0.042 ml/day); what the mechanistic model then determines on its own is which reactors sour and when. |
 | **Someone debugging a failing reactor** | The `/chat` endpoint and Streamlit UI answer "why is R047 souring?" by combining that reactor's exact pH/VFA trace (SQL) with the literature's explanation of VFA-driven methanogen inhibition (vector search). Never a guess, always attributed. |
 | **A reviewer auditing a claim** | Every chat answer ships with its retrieval trace: the exact passages and warehouse aggregates that grounded it, each tagged `published_finding` (from the source paper) or `domain_context` (general process chemistry, not what the paper measured). A claim can never be mistaken for a result the study didn't report. |
 | **A data engineer evaluating the pattern** | A worked example of hybrid RAG over a quantitative domain. SQL handles the numbers a vector store can't compute, vectors handle the mechanism SQL can't explain, orchestrated by Airflow with a scientific-reproduction gate in the DAG's critical path. |
@@ -51,7 +51,7 @@ Two ingestion tracks converge on a unified retrieval layer. Full narrative in [`
 flowchart TB
     subgraph track1["Track 1: Structured"]
         direction TB
-        SIM["generate_telemetry.py<br/>mechanistic VFA/pH/Gompertz sim<br/>100 reactors × 30 days, seeded RNG"]
+        SIM["generate_telemetry.py<br/>mechanistic VFA/pH/Gompertz sim<br/>100 reactors × 37 days, seeded RNG"]
         SIM -->|Parquet, bronze| MINIO[("MinIO<br/>s3://biostreamer-lake")]
         MINIO --> PG[("PostgreSQL<br/>reactor_config<br/>reactor_telemetry")]
         SIM -->|upsert| PG
@@ -79,7 +79,7 @@ flowchart TB
     style AF fill:#5a4a7a,color:#fff
 ```
 
-**Why hybrid, not vector-only.** A vector store retrieves a passage that *discusses* yields; it cannot compute a mean over 3,000 telemetry rows. SQL returns exact numbers with no mechanism. Every `/chat` call runs both retrievals and hands the language model labelled context from each, so it composes an answer instead of doing the arithmetic itself.
+**Why hybrid, not vector-only.** A vector store retrieves a passage that *discusses* yields; it cannot compute a mean over 3,700 telemetry rows. SQL returns exact numbers with no mechanism. Every `/chat` call runs both retrievals and hands the language model labelled context from each, so it composes an answer instead of doing the arithmetic itself.
 
 **The validation gate.** Both Airflow DAGs fail closed. `bioreactor_telemetry` refuses to load a dataset into the warehouse unless its 36-reactor reference cohort reproduces the published mean yields within tolerance. `literature_embedding` refuses to consider indexing complete unless three retrieval probes return the expected provenance class. A pipeline that silently drifts from ground truth is a worse failure mode here than one that stops.
 
@@ -107,7 +107,6 @@ flowchart TB
 ```
 biostreamer/
 ├── ARCHITECTURE.md              # full system design rationale
-├── TECHNICAL_PAPER.md           # peer-review-style writeup
 ├── docker-compose.yml           # postgres, qdrant, minio, airflow
 ├── requirements.txt
 ├── .env.example                 # copy to .env and fill in
@@ -150,12 +149,14 @@ Airflow needs Postgres healthy first, then takes a minute or two on first boot (
 docker compose up -d airflow
 ```
 
-| Service | URL | Credentials |
+These are local dev defaults, set in `docker-compose.yml` for a Codespace or laptop, not production credentials. Change them before deploying anywhere reachable outside your machine.
+
+| Service | URL | Local dev login |
 |---|---|---|
 | Airflow UI | http://localhost:8080 | `admin` / `adminpassword` |
 | MinIO console | http://localhost:9001 | `admin` / `adminpassword` |
 | Qdrant API | http://localhost:6333 | none |
-| PostgreSQL | `localhost:5432` | `data_engineer` / `zoomcamp_secret_pass`, db `biostream_db` |
+| PostgreSQL | `localhost:5432` | `data_engineer` / `biostream_dev_pw`, db `biostream_db` |
 
 ### 2. Configure environment
 
@@ -176,7 +177,7 @@ pip install -r requirements.txt
 Either trigger them from the Airflow UI (`bioreactor_telemetry`, `literature_embedding`), or run them directly:
 
 ```bash
-# Track 1: simulate 100 reactors x 30 days, validate against the published paper, load to Postgres
+# Track 1: simulate 100 reactors x 37 days, validate against the published paper, load to Postgres
 python -m src.pipelines.load_telemetry
 
 # Track 2: chunk the literature corpus, embed it, index into Qdrant
@@ -212,13 +213,12 @@ curl -s -X POST localhost:8000/chat -H "Content-Type: application/json" \
 
 ## Validation
 
-The platform is evaluated against the study it's grounded in, not just its own internal consistency:
+The platform is evaluated against the study it's grounded in, not just its own internal consistency. It is worth being precise about what "reproduces the paper" means here, since two different things are being claimed:
 
-- **36 reference-design reactors** reproduce the source paper's Table 2 mean yields to a **maximum absolute deviation of 0.029 ml/day**, well within the resolution of the water-displacement method itself.
+- **Absolute yields are calibrated, not independently predicted.** `generate_telemetry.py` runs a two-pass process: a mechanistic pass sets the shape of each reactor's daily output (when gas appears, how a pH crash suppresses it), then a second pass scales that raw series so its window mean matches the paper's Table 2 mean for that cell, capped at 4x to stop the scaling from inflating a reactor the mechanism genuinely drove to failure. For the 36 reference-design reactors this means the mean yield matches the paper largely by construction. The residual that survives calibration and rounding, a **maximum absolute deviation of 0.042 ml/day** across all twelve cells, is a measure of calibration precision, not of independent predictive accuracy.
+- **What the mechanism determines on its own** is which reactors sour and when, since souring depends on the VFA-to-alkalinity balance and the pH gate, not on the calibration target. That is why Pu at C2 and C3 lands at 0.00 ml/day without ever being told to: its long unseeded lag and thin nitrogen buffer drive it there mechanistically. The same logic governs the 64 exploratory reactors beyond the published design: 361 soured reactor-days appear above roughly 20% total solids, and zero within the published envelope, purely from the pH-gate dynamics.
 - **Retrieval provenance** was verified against three representative questions (comparative-yield, process-mechanism, factual-recall). The top-ranked passage carried the correct `published_finding` / `domain_context` tag in every case, and this check is now an automated gate in the `literature_embedding` DAG.
 - **Graceful degradation** was exercised under a real failure condition (an exhausted API key). `/chat` correctly surfaced the billing error while still returning full retrieval context, rather than failing the request outright.
-
-Full methodology and results: [`TECHNICAL_PAPER.md`](TECHNICAL_PAPER.md), section 4.
 
 ---
 
