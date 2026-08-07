@@ -92,7 +92,7 @@ is flagged as such wherever it surfaces in the UI and the RAG context.
         |                                                                 |
   TRACK 1: STRUCTURED                                       TRACK 2: UNSTRUCTURED
   Mock IoT telemetry stream                                Peer-reviewed literature
-  (100 reactors x 30 days)                                 (DOI 10.30574/gscbps.2024.29.2.0423)
+  (100 reactors x 37 days)                                 (DOI 10.30574/gscbps.2024.29.2.0423)
         |                                                                 |
         v                                                                 v
   +-----------------------+                                 +----------------------------+
@@ -155,8 +155,17 @@ is flagged as such wherever it surfaces in the UI and the RAG context.
 ### 3.1 Simulation model
 
 `src/pipelines/generate_telemetry.py` does not sprinkle noise on a curve. It runs a
-coupled acidogenesis/methanogenesis state model per reactor per day, then calibrates
-the magnitude so that the 36 reference reactors reproduce the paper's Table 2 means.
+coupled acidogenesis/methanogenesis state model per reactor per day in a first pass,
+which decides the shape of each reactor's output (when gas appears, how a pH crash
+suppresses it), then a second pass scales that raw series so its mean lands on the
+paper's Table 2 value for that cell, capped at 4x so a reactor the mechanism drove to
+failure cannot be scaled back up to its nominal target. Worth stating plainly: for the
+36 reference reactors this makes the mean yield match the paper by construction, since
+that mean is exactly the calibration target. What is not by construction is which
+reactors sour, when, and how far the raw series has to be scaled to reach its target
+(a reactor near the 4x cap is one the mechanism nearly failed outright). That is the
+part of the model actually being tested against the paper's Table 2, not merely fitted
+to it.
 
 **State variables (per reactor, per day):**
 
@@ -213,14 +222,14 @@ mixing model would smooth away.
 | `substrate_ratio` | `TEXT` | e.g. `0.691:1` |
 | `bean_fraction` | `NUMERIC(5,4)` | 0 to 1 |
 | `slurry_ratio` | `TEXT` | e.g. `1:6` |
-| `slurry_concentration_pct_ts` | `NUMERIC(5,2)` | **CHECK between 5 and 25** |
+| `slurry_concentration_pct_ts` | `NUMERIC(5,2)` | **CHECK between 4.5 and 25.5** (the platform's 5 to 25% design space, with a half-point margin either side) |
 | `carbon_nitrogen_ratio` | `NUMERIC(6,3)` | |
 | `substrate_total_solids_pct` | `NUMERIC(5,2)` | |
 | `working_volume_ml` | `NUMERIC(7,2)` | 753.0 |
 | `is_reference_design` | `BOOLEAN` | true for the 36 RCBD replicates |
 | `replicate_id` | `SMALLINT` | 1 to 3 |
 
-`bioprocess.reactor_telemetry`: one row per reactor-day (fact table, 100 x 30 = 3,000
+`bioprocess.reactor_telemetry`: one row per reactor-day (fact table, 100 x 37 = 3,700
 rows).
 
 | Column | Type | Notes |
@@ -228,7 +237,7 @@ rows).
 | `reading_id` | `BIGSERIAL PK` | |
 | `reactor_id` | `TEXT FK` | references `reactor_config` |
 | `reading_date` | `DATE` | |
-| `day_index` | `SMALLINT` | 1 to 30, **CHECK between 1 and 30** |
+| `day_index` | `SMALLINT` | 1 to 37 for the current 37-day timeline, **CHECK between 1 and 60** (headroom for a longer run without a migration) |
 | `daily_ph` | `NUMERIC(4,2)` | **CHECK between 3.5 and 9.0** |
 | `vfa_mg_l` | `NUMERIC(9,2)` | |
 | `alkalinity_mg_caco3_l` | `NUMERIC(9,2)` | |
@@ -303,7 +312,7 @@ question
 
 **Why hybrid, not vector-only.** Asking a vector store "what is the mean yield of
 BP1u at C1" retrieves a *passage that discusses* yields; it cannot compute over
-3,000 telemetry rows. Asking SQL "why did reactor R047 sour" returns numbers with
+3,700 telemetry rows. Asking SQL "why did reactor R047 sour" returns numbers with
 no mechanism. Numeric questions are answered by SQL, exactly, from the warehouse,
 and mechanistic questions by retrieved literature. The LLM composes; it does not
 do arithmetic. This is the single largest lever on hallucination rate in this
@@ -337,8 +346,9 @@ produced each claim.
 | FastAPI | 8000 | local `uvicorn` | Unified RAG API |
 | Streamlit | 8501 | local | Analyst UI |
 
-Credentials for the local stack are in `docker-compose.yml`. Application secrets go
-in `.env` (git-ignored, template in `.env.example`).
+Local dev logins for the stack are in `docker-compose.yml`, meant for a Codespace or
+laptop, not a deployment reachable outside it. Application secrets (the Anthropic API
+key) go in `.env` (git-ignored, template in `.env.example`).
 
 ---
 
@@ -359,7 +369,6 @@ in `.env` (git-ignored, template in `.env.example`).
 ```
 biostreamer/
 +-- ARCHITECTURE.md              (this document)
-+-- TECHNICAL_PAPER.md           (publication draft)
 +-- docker-compose.yml
 +-- requirements.txt
 +-- .env.example
