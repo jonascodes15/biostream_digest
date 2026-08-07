@@ -1,4 +1,4 @@
-"""Airflow DAG — BioStreamer Track 1 (structured bioreactor telemetry).
+"""Airflow DAG for BioStreamer Track 1 (structured bioreactor telemetry).
 
     simulate -> validate_against_paper -> land_bronze -> load_warehouse -> verify
 
@@ -41,11 +41,11 @@ DEFAULT_ARGS = {
 # --------------------------------------------------------------------------- #
 
 def task_simulate(**context) -> str:
-    """Generate the reactor design and 30-day telemetry; stage as Parquet.
+    """Generate the reactor design and 37-day telemetry; stage as Parquet.
 
     Parquet is written to a run-scoped staging path rather than passed through
-    XCom -- 3 000 rows of telemetry has no business travelling through the
-    metadata database.
+    XCom (3,700 rows of telemetry has no business travelling through the
+    metadata database).
     """
     from pathlib import Path
 
