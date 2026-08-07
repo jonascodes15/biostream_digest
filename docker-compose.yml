@@ -9,7 +9,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: data_engineer
-      POSTGRES_PASSWORD: zoomcamp_secret_pass
+      POSTGRES_PASSWORD: biostream_dev_pw
       POSTGRES_DB: biostream_db
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
@@ -57,7 +57,7 @@ services:
         condition: service_healthy
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://data_engineer:zoomcamp_secret_pass@postgres:5432/biostream_db
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://data_engineer:biostream_dev_pw@postgres:5432/biostream_db
       - AIRFLOW__CORE__FERNET_KEY=46dxvaZ7FB96N7v_YkP468_S_SXY-4_L2-wQQvOAgAg=
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
@@ -69,7 +69,7 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=data_engineer
-      - POSTGRES_PASSWORD=zoomcamp_secret_pass
+      - POSTGRES_PASSWORD=biostream_dev_pw
       - POSTGRES_DB=biostream_db
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
