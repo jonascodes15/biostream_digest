@@ -1,4 +1,4 @@
-"""Airflow DAG — BioStreamer Track 2 (unstructured literature knowledge).
+"""Airflow DAG for BioStreamer Track 2 (unstructured literature knowledge).
 
     chunk_corpus -> embed_and_index -> verify_retrieval
 

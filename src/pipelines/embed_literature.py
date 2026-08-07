@@ -1,4 +1,4 @@
-"""Track 2 — unstructured knowledge pipeline: chunk, embed, and index the
+"""Track 2: unstructured knowledge pipeline: chunk, embed, and index the
 literature corpus into Qdrant.
 
     corpus (paper text + domain notes, tagged by provenance)

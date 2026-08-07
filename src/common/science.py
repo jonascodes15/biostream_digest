@@ -175,7 +175,7 @@ ANOVA = {
 # --------------------------------------------------------------------------- #
 
 PLATFORM_REACTOR_COUNT = 100
-PLATFORM_TIMELINE_DAYS = 30
+PLATFORM_TIMELINE_DAYS = PAPER_RETENTION_DAYS  # match the paper's own 37-day window
 TS_RANGE_PCT = (5.0, 25.0)
 
 # The published design only reaches ~13.7 %TS (C1 with Bu). Anything above this is
